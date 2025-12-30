@@ -80,6 +80,16 @@ export const getAllUsers = async (req, res) => {
 export const deleteAccount = async (req, res) => {
   try {
     const { id } = req.user;
+    const { password } = req.body;
+
+    if (!password) return res.status(400).json({ msg: "Password required" });
+
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const check = await bcrypt.compare(password, user.password);
+    if (!check) return res.status(400).json({ msg: "Invalid password" });
+
     await User.findByIdAndDelete(id);
     res.json({ msg: "Account deleted" });
   } catch {

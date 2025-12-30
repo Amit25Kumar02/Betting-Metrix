@@ -1,6 +1,4 @@
 import User from "../models/User.js";
-import fs from "fs";
-import path from "path";
 
 // update profile
 export const updateProfile = async (req, res) => {
@@ -17,23 +15,9 @@ export const updateProfile = async (req, res) => {
             sports: sports ? JSON.parse(sports) : user.sports,
         };
 
-
         if (req.file) {
-            if (user.profileImage) {
-                const oldFile = path.join("uploads/profile/", user.profileImage);
-
-                if (fs.existsSync(oldFile)) {
-                    fs.unlink(oldFile, (err) => {
-                        if (err) console.log("Delete failed:", err);
-                    });
-                } else {
-                    console.log("⚠ Old image file not found, skipping delete");
-                }
-            }
-
-            updateData.profileImage = req.file.filename;
+            updateData.profileImage = req.file.path || req.file.filename;
         }
-
 
         const updated = await User.findByIdAndUpdate(id, updateData, { new: true });
         return res.json({ msg: "Profile updated", user: updated });
