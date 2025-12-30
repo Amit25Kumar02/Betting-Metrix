@@ -4,12 +4,11 @@ import User from "../models/User.js";
 export const updateProfile = async (req, res) => {
     try {
         const { id } = req.user;
-        const { fullName, email, countryCode, phone, sports } = req.body;
+        const { fullName,  countryCode, phone, sports } = req.body;
         const user = await User.findById(id);
 
         const updateData = {
             fullName,
-            email,
             countryCode,
             phone,
             sports: sports ? JSON.parse(sports) : user.sports,
