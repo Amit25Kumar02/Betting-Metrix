@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
+import { sendOtpEmail } from "../utils/sendOtp.js";
+import  client  from "../config/redis.js";
 
 // register
 export const register = async (req, res) => {
@@ -94,6 +96,76 @@ export const deleteAccount = async (req, res) => {
     res.json({ msg: "Account deleted" });
   } catch {
     res.status(500).json({ msg: "Error" });
-  } 
+  }
 };
 
+export const sendResetOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) return res.status(404).json({ msg: "User not found" });
+
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    await client.set(`otp:${email}`, otp, { EX: 300 });
+
+    const sent = await sendOtpEmail(email, otp);
+    if (!sent) return res.status(500).json({ msg: "Failed to send OTP" });
+
+    return res.json({ msg: "OTP sent successfully" });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// verify otp
+
+export const verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const storedOtp = await client.get(`otp:${email}`);
+
+    if (!storedOtp) return res.status(400).json({ msg: "OTP expired or not found" });
+    if (storedOtp !== otp) return res.status(400).json({ msg: "Invalid OTP" });
+
+   
+    await client.del(`otp:${email}`);
+
+    return res.json({ msg: "OTP verified" });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// reset password
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    const otpExists = await client.get(`otp:${email}`);
+    if (otpExists) {
+      return res.status(400).json({ msg: "OTP not verified yet!" });
+    }
+
+   
+    const hash = await bcrypt.hash(newPassword, 10);
+
+ 
+    await User.findOneAndUpdate(
+      { email },
+      { password: hash },
+      { new: true }
+    );
+
+    return res.status(200).json({ msg: "Password reset successfully" });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ msg: "Server error" });
+  }
+};
