@@ -50,9 +50,9 @@ export const saveSports = async (req, res) => {
 // login
 export const login = async (req, res) => {
   try {
-    const { phone, password } = req.body;
+    const { email, password } = req.body;
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: "Invalid credentials" });
 
     const check = await bcrypt.compare(password, user.password);
