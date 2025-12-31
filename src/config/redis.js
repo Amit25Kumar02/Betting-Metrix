@@ -1,6 +1,7 @@
 const redis = require("redis");
 
-const client = redis.createClient(process.env.UPSTASH_REDIS_REST_URL, {
+const client = redis.createClient({
+  url: process.env.UPSTASH_REDIS_REST_URL,
   token: process.env.UPSTASH_REDIS_REST_TOKEN
 });
 
