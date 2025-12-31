@@ -2,12 +2,12 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-const uploadDir = path.join(process.cwd(), "uploads", "profile");
+const uploadDir = path.join(process.cwd(), "uploads", "tips");
 
-// Auto-create folder if not present
+// Auto-create folder if missing
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
-  console.log("Created upload folder:", uploadDir);
+  console.log("Created folder:", uploadDir);
 }
 
 // Multer storage config
@@ -16,24 +16,24 @@ const storage = multer.diskStorage({
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
-  
-    const cleanName = file.originalname.replace(/\s+/g, "_");
-    const uniqueName = Date.now() + "-" + cleanName;
+    // Remove spaces, make safe
+    const clean = file.originalname.replace(/\s+/g, "_");
+    const uniqueName = Date.now() + "-" + clean;
     cb(null, uniqueName);
   }
 });
 
-// File filter 
+// Validate allowed images
 function fileFilter(req, file, cb) {
   const allowed = ["image/png", "image/jpg", "image/jpeg", "image/webp"];
   if (!allowed.includes(file.mimetype)) {
-    return cb(new Error("Invalid file type! Only images allowed"), false);
+    return cb(new Error("Invalid file type – only images allowed"), false);
   }
   cb(null, true);
 }
 
-export const uploader = multer({
+export const tipUploader = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 1 * 1024 * 1024 } // 1mb limit
+  limits: { fileSize: 2 * 1024 * 1024 } // max 2MB
 });

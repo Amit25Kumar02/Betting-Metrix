@@ -1,7 +1,7 @@
 const redis = require("redis");
 
-const client = redis.createClient({
-  url: "redis://127.0.0.1:6379"
+const client = redis.createClient(process.env.UPSTASH_REDIS_REST_URL, {
+  token: process.env.UPSTASH_REDIS_REST_TOKEN
 });
 
 client.connect();

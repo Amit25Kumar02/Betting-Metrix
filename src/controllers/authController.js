@@ -11,15 +11,16 @@ export const register = async (req, res) => {
 
     if (!fullName || !email || !password || !phone || !countryCode)
       return res.status(400).json({ msg: "All fields required" });
+    const lowerEmail = email.toLowerCase().trim();
 
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ email: lowerEmail });
     if (userExists) return res.status(400).json({ msg: "Email already used" });
 
     const hash = await bcrypt.hash(password, 10);
 
     const newUser = await User.create({
       fullName,
-      email,
+      email: lowerEmail,
       password: hash,
       countryCode,
       phone,
